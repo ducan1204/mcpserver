@@ -1,0 +1,26 @@
+# Core Python utilities
+python-dotenv
+requests
+asyncio
+pydantic
+
+# LangChain and LangGraph components
+langchain
+langgraph
+langchain-core
+langchain-community
+langchain-openai
+langchain-google-genai
+langgraph-prebuilt
+langchain-mcp-adapters
+
+# SQL and DB
+sqlalchemy
+
+# Google Generative AI
+google-generativeai
+
+# Typing extensions (for TypedDict, Annotated)
+typing-extensions
+
+fastapi
