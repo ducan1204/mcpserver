@@ -1,5 +1,3 @@
-# main.py
-from mcp.server.fastmcp import FastMCP
 import aiohttp
 from typing_extensions import TypedDict
 from langchain.chat_models import init_chat_model
@@ -9,13 +7,15 @@ from pydantic import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 from dotenv import load_dotenv
-
+import requests
+from langchain_core.tools import tool
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Get API keys from environment variables
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+OPEN_WEATHER_API_KEY = os.getenv('OPEN_WEATHER_MAP_API_KEY')
 
 class State(TypedDict):
     question:str
@@ -30,8 +30,7 @@ class QueryOutput(BaseModel):
 
 model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key=GOOGLE_API_KEY, max_tokens=4096)
 
-mcp = FastMCP("getindustrialzones")
-@mcp.tool()
+@tool
 async def get_industrial_parks_info(prompt:str) -> dict:
     """
       Tool để trả lời các câu hỏi về danh sách các khu công nghiệp có sẵn. 
@@ -132,7 +131,8 @@ def write_query(state: State) -> str:
     return state
 
 async def call_backend(state: State):
-    URL = f"http://10.66.68.17:31797/industrial-parks/raw?query={state["query"]}"
+    print(state)
+    URL = f"http://10.66.68.17:31797/industrial-parks/raw?query={state['query']}"
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(URL) as response:
@@ -216,7 +216,40 @@ async def execute(prompt: str):
     graph = workflow.compile()
 
     result = await graph.ainvoke({"question": prompt})
-    
     return result
-if __name__ == "__main__":
-    mcp.run()
+
+@tool
+async def get_personal_info(name:str) -> dict:
+    """Get the city of person based on the name."""
+    try:
+
+        match(name):
+            case "An":
+                info = "An lives in New York city"
+            case "Thạch":
+                info = "Thach lives in London city"
+            case "Hùng":
+                info = "Hung lives in Paris city"
+            case _:
+                return {"error": "Invalid name"}
+        
+        return info
+    except Exception as e:
+        return {"error": str(e)}
+    
+
+@tool
+async def get_temperature_data(location:str) -> dict:
+    """Fetch real-time temperature data by location."""
+    URL = f"https://api.openweathermap.org/data/2.5/weather?q={location}&APPID={OPEN_WEATHER_API_KEY}"
+    try:
+        response = requests.get(URL)
+        print(response)
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+tools = [get_industrial_parks_info, get_personal_info, get_temperature_data]
+
+def get_tools():
+    return tools

@@ -1,14 +1,14 @@
 import asyncio
 import sys
-from langchain_mcp_adapters.client import MultiServerMCPClient
 from dotenv import load_dotenv
 from langgraph.prebuilt import create_react_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 from pydantic import HttpUrl
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from tools import get_tools
 
 # Load environment variables from .env file
 load_dotenv()
@@ -39,33 +39,24 @@ class ResponseFormat(BaseModel):
     text: str
     objects: List[IndustrialPark]
 
-# print(model)
 async def main(question: str):
-    async with MultiServerMCPClient() as client:
-        print("Connecting to MCP servers...")
+    # Create the AI agent
+    systemPrompt = """Try to parse the response into an object format with 2 property text and objects."""
 
-        # Connect each MCP server
-        await client.connect_to_server("gettemperature", command=python_path, args=["get_temperature.py"])
-        await client.connect_to_server("getindustrialzones", command=python_path, args=["get_industrial_zones.py"])
-        await client.connect_to_server("getpersonalinfo", command=python_path, args=["get_personal_info.py"])
+    agent = create_react_agent(
+        model, 
+        get_tools(), 
+        debug=False, 
+        prompt=systemPrompt,
+        response_format=ResponseFormat
+    )
 
-        # Create the AI agent
-        systemPrompt = """Try to parse the response into an object format with 2 property text and objects."""
-
-        agent = create_react_agent(
-            model, 
-            client.get_tools(), 
-            debug=False, 
-            prompt=systemPrompt,
-            response_format=ResponseFormat
-        )
-    
-        request = {
-            "messages": question
-        }
-        results = await agent.ainvoke(debug=True, input=request)
-        parsed_data = parse_ai_messages(results)
-        return parsed_data
+    request = {
+        "messages": question
+    }
+    results = await agent.ainvoke(debug=True, input=request)
+    parsed_data = parse_ai_messages(results)
+    return parsed_data
             
 async def main_loop():
     while True:

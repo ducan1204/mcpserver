@@ -17,9 +17,6 @@ langchain-mcp-adapters
 # SQL and DB
 sqlalchemy
 
-# Google Generative AI
-google-generativeai
-
 # Typing extensions (for TypedDict, Annotated)
 typing-extensions
 
