@@ -67,6 +67,7 @@ async def main_loop():
 
 def parse_ai_messages(data):
     structured_response = dict(data).get('structured_response', [])
+    print(f"Structured Response: {structured_response}")
     return structured_response
 
 if __name__ == "__main__":

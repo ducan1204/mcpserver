@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 import requests
 from langchain_core.tools import tool
+from search_document import search
 
 # Load environment variables from .env file
 load_dotenv()
@@ -248,8 +249,17 @@ async def get_temperature_data(location:str) -> dict:
         return response.json()
     except Exception as e:
         return {"error": str(e)}
+    
+@tool
+async def get_santa_information(text:str) -> dict:
+    """Fetch related information about SantaPocket or other products of Santa ecosystem."""
+    knowledge = await search(text)
+    try:
+        return knowledge
+    except Exception as e:
+        return {"error": str(e)}
 
-tools = [get_industrial_parks_info, get_personal_info, get_temperature_data]
+tools = [get_santa_information]
 
 def get_tools():
     return tools

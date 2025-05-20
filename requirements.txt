@@ -21,3 +21,11 @@ sqlalchemy
 typing-extensions
 
 fastapi
+
+pytesseract
+pdf2image
+asyncpg
+transformers
+pymupdf
+nltk
+sentence-transformers

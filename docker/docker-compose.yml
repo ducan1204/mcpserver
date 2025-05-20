@@ -7,3 +7,39 @@ services:
       dockerfile: docker/Dockerfile
     ports:
       - "8000:8000"
+    depends_on:
+      - postgres
+  postgres:
+    image: pgvector/pgvector:pg16
+    command: ["postgres"]
+    restart: on-failure
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - ./services/postgres/initdb:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_MULTIPLE_DATABASES
+      - POSTGRES_EXTENSIONS
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "${MINIO_API_PORT}:9000" # S3 API port
+      - "${MINIO_UI_PORT}:9001" # Web UI port
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_API_PORT=${MINIO_API_PORT}
+      - MINIO_UI_PORT=${MINIO_UI_PORT}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
+volumes:
+  postgres_data:
+  minio-data:
