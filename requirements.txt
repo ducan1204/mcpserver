@@ -29,3 +29,4 @@ transformers
 pymupdf
 nltk
 sentence-transformers
+uvicorn[standard]
