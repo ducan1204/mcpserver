@@ -7,6 +7,7 @@ services:
       dockerfile: docker/Dockerfile
     ports:
       - "8000:8000"
+      - "${MAIN_PORT}:8000"
     volumes:
       - ../:/app
     depends_on:
@@ -41,7 +42,28 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
+  meilisearch:
+    image: getmeili/meilisearch:v1.15.0
+    restart: on-failure
+    expose:
+      - "7700"
+    ports:
+      - "${MEILISEARCH_PORT}:7700"
+    volumes:
+      - meilisearch:/meili_data
+    environment:
+      - MEILI_ENV=${MEILISEARCH_ENV}
+      - MEILI_MASTER_KEY=${MEILISEARCH_MASTER_KEY}
+  qdrant:
+    image: qdrant/qdrant:v1.14.0
+    restart: on-failure
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant:/qdrant/storage
 
 volumes:
   postgres_data:
   minio-data:
+  meilisearch:
+  qdrant:

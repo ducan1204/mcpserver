@@ -9,6 +9,7 @@ from typing import List, Optional
 from pydantic import HttpUrl
 from fastapi import FastAPI
 from tools import get_tools
+from langchain_core.messages import HumanMessage
 
 # Load environment variables from .env file
 load_dotenv()
@@ -37,11 +38,11 @@ class IndustrialPark(BaseModel):
 
 class ResponseFormat(BaseModel):
     text: str
-    objects: List[IndustrialPark]
+    # objects: List[IndustrialPark]
 
-async def main(question: str):
+async def main(question: str, document_id: str):
     # Create the AI agent
-    systemPrompt = """Try to parse the response into an object format with 2 property text and objects."""
+    systemPrompt = """Try to use tools to answer user question"""
 
     agent = create_react_agent(
         model, 
@@ -52,7 +53,9 @@ async def main(question: str):
     )
 
     request = {
-        "messages": question
+        "messages": [
+            HumanMessage(content=f"{question}. document_id={document_id}")
+        ]
     }
     results = await agent.ainvoke(debug=True, input=request)
     parsed_data = parse_ai_messages(results)
@@ -63,13 +66,13 @@ async def main_loop():
         question = input("Question> ")
         if question.lower() == "exit":
             return
-        await main(question)
+        await main(question, "0f129423-eff9-486f-8ee9-979be55b1974")
 
 def parse_ai_messages(data):
     structured_response = dict(data).get('structured_response', [])
-    print(f"Structured Response: {structured_response}")
+    # print(f"Structured Response: {structured_response}")
     return structured_response
 
-if __name__ == "__main__":
-    asyncio.run(main_loop())
+# if __name__ == "__main__":
+#     asyncio.run(main_loop())
     

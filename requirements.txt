@@ -30,3 +30,5 @@ pymupdf
 nltk
 sentence-transformers
 uvicorn[standard]
+qdrant-client
+pydantic

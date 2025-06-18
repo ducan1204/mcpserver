@@ -1,3 +1,4 @@
+from typing import Dict
 import aiohttp
 from typing_extensions import TypedDict
 from langchain.chat_models import init_chat_model
@@ -10,6 +11,8 @@ from dotenv import load_dotenv
 import requests
 from langchain_core.tools import tool
 from search_document import search
+from ollama.ollama_services import get_embedding as get_ollama_embedding
+from qdrant.qdrant_services import search as qdrant_search
 
 # Load environment variables from .env file
 load_dotenv()
@@ -251,15 +254,30 @@ async def get_temperature_data(location:str) -> dict:
         return {"error": str(e)}
     
 @tool
-async def get_santa_information(text:str) -> dict:
-    """Fetch related information about SantaPocket or other products of Santa ecosystem."""
-    knowledge = await search(text)
+async def get_santa_information(messages: str, document_id: str) -> dict:
+    """Trả lời những thông tin liên quan đến hệ sinh thái Santa( SantaFood, SantaPocket, SantaEshop, SantaMarket, SantaSurprise, SantaCharity, Affina, thông tin cơ bản, điểm đặt tủ, cước phí gửi tủ, cách mua hàng, thời gian giữ hàng, ưu đãi, tính năng dịch vụ và câu hỏi thường gặp)"""
+    # text = input["messages"]
+    # document_id = input["document_id"]
+    # print(text)
+    # print(document_id)
+    knowledge = await search(messages, document_id)
     try:
         return knowledge
     except Exception as e:
         return {"error": str(e)}
+    
+@tool
+async def search_santa_info(messages: str, document_id: str) -> dict:
+    """Tìm kiếm thông tin liên quan đến hệ sinh thái Santa."""
 
-tools = [get_santa_information]
+    points = await get_ollama_embedding(messages)
+    result = qdrant_search("documents", points, limit=5, with_payload=True)
+    try:
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+tools = [search_santa_info]
 
 def get_tools():
     return tools
